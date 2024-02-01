@@ -1,45 +1,36 @@
 package live.vishsinh.expensetracker.entity;
 
 import jakarta.persistence.*;
-import java.util.List;
-
 
 @Entity
-@Table(name = "user_groups")
+@Table(name = "user_group")
 public class Group {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "group_id")
     private Long groupId;
 
-    @Column(nullable = false)
+    @Column(name = "admin_id")
+    private Long adminId;
+
+    @Column(nullable = false, length = 100)
+    private String password;
+
+    @Column(name = "group_name", length = 20)
     private String groupName;
 
-
-    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL)
-    private List<Member> members;
-
-    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL)
-    private List<Expense> expenses;
-
-
-    //Constructors
-
+    // Constructors
     public Group() {
     }
 
-
-    public Group(Long groupId, String groupName, List<Member> members, List<Expense> expenses) {
-        this.groupId = groupId;
+    public Group(Long adminId, String password, String groupName) {
+        this.adminId = adminId;
+        this.password = password;
         this.groupName = groupName;
-        this.members = members;
-        this.expenses = expenses;
     }
 
-
-    //Getters and Setters
-
-
+    // Getters and Setters
     public Long getGroupId() {
         return groupId;
     }
@@ -48,27 +39,27 @@ public class Group {
         this.groupId = groupId;
     }
 
+    public Long getAdminId() {
+        return adminId;
+    }
+
+    public void setAdminId(Long adminId) {
+        this.adminId = adminId;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
     public String getGroupName() {
         return groupName;
     }
 
     public void setGroupName(String groupName) {
         this.groupName = groupName;
-    }
-
-    public List<Member> getMembers() {
-        return members;
-    }
-
-    public void setMembers(List<Member> members) {
-        this.members = members;
-    }
-
-    public List<Expense> getExpenses() {
-        return expenses;
-    }
-
-    public void setExpenses(List<Expense> expenses) {
-        this.expenses = expenses;
     }
 }

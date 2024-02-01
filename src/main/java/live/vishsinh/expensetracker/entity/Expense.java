@@ -1,7 +1,7 @@
 package live.vishsinh.expensetracker.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+
 import java.util.Date;
 
 @Entity
@@ -10,47 +10,34 @@ public class Expense {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "expense_id")
     private Long expenseId;
 
     @Column(nullable = false)
     private Double amount;
 
     @Column(nullable = false)
-    private String category;
-
-    @Column(nullable = false)
-    private Date date;
-
     private String description;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    @JsonIgnore
-    private Member user;
+    @Column(nullable = false)
+    public Date date;
 
-    @ManyToOne
-    @JoinColumn(name = "group_id")
-    @JsonIgnore
-    private Group group;
-
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
 
     // Constructors
     public Expense() {
     }
 
-    public Expense(Long expenseId, Double amount, String category, Date date, String description, Member user, Group group) {
+    public Expense(Long expenseId, Double amount, String description, Date date, Long userId) {
         this.expenseId = expenseId;
         this.amount = amount;
-        this.category = category;
-        this.date = date;
         this.description = description;
-        this.user = user;
-        this.group = group;
+        this.date = date;
+        this.userId = userId;
     }
 
-
     // Getters and Setters
-
 
     public Long getExpenseId() {
         return expenseId;
@@ -68,12 +55,12 @@ public class Expense {
         this.amount = amount;
     }
 
-    public String getCategory() {
-        return category;
+    public String getDescription() {
+        return description;
     }
 
-    public void setCategory(String category) {
-        this.category = category;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public Date getDate() {
@@ -84,27 +71,11 @@ public class Expense {
         this.date = date;
     }
 
-    public String getDescription() {
-        return description;
+    public Long getUserId() {
+        return userId;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public Member getUser() {
-        return user;
-    }
-
-    public void setUser(Member user) {
-        this.user = user;
-    }
-
-    public Group getGroup() {
-        return group;
-    }
-
-    public void setGroup(Group group) {
-        this.group = group;
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 }
