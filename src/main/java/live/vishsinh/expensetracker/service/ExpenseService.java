@@ -13,26 +13,33 @@ public class ExpenseService {
 
         @Autowired
         private ExpenseRepository expenseRepository;
+
         @Autowired
         private UserRepository userRepository;
 
-        public Expense createExpense(Double amount, Date date, String description, Long userId) {
+        public Expense createExpense(Double amount, Date date, String description, String userIdHash) {
 
-            User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+            User user = userRepository.findByUserIdHash(userIdHash);
+            if(user == null) {
+                throw new RuntimeException("User not found");
+            }
 
             Expense expense = new Expense();
             expense.setAmount(amount);
             expense.setDate(date);
             expense.setDescription(description);
-            expense.setUserId(user.getUserId());
+            expense.setUserId(user.getUserIdHash());
 
             return expenseRepository.save(expense);
         }
 
-        public List<Expense> getUserExpense(Long userId) {
+        public List<Expense> getUserExpense(String userIdHash) {
             System.out.println("Here - 1");
-            User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+            User user = userRepository.findByUserIdHash(userIdHash);
+            if(user == null) {
+                throw new RuntimeException("User not found");
+            }
             System.out.println("Here - 2");
-            return expenseRepository.findByUserId(user.getUserId());
+            return expenseRepository.findByUserIdHash(user.getUserIdHash());
         }
 }

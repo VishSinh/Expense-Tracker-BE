@@ -1,7 +1,9 @@
 package live.vishsinh.expensetracker.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
 
+@Getter
 @Entity
 @Table(name = "user_group")
 public class Group {
@@ -30,33 +32,16 @@ public class Group {
         this.groupName = groupName;
     }
 
-    // Getters and Setters
-    public Long getGroupId() {
-        return groupId;
-    }
-
     public void setGroupId(Long groupId) {
         this.groupId = groupId;
-    }
-
-    public Long getAdminId() {
-        return adminId;
     }
 
     public void setAdminId(Long adminId) {
         this.adminId = adminId;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public String getGroupName() {
-        return groupName;
     }
 
     public void setGroupName(String groupName) {

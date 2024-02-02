@@ -1,8 +1,9 @@
 package live.vishsinh.expensetracker.controller;
 
-import live.vishsinh.expensetracker.entity.User;
+import live.vishsinh.expensetracker.helpers.ResponseObj;
 import live.vishsinh.expensetracker.service.UserService;
 
+import org.apache.coyote.BadRequestException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -14,22 +15,51 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    public static class createUserRequest {
+    public static class AuthSignUpRequest {
+        public String phoneNumber;
         public String username;
+        public String password;
     }
 
-    @PostMapping("/create")
-    public ResponseEntity<String> createUser(@RequestBody createUserRequest requestBody) {
+    @PostMapping("/auth/signup")
+    public ResponseObj authSignUp(@RequestBody AuthSignUpRequest requestBody) {
         try{
-            if(requestBody.username == null || requestBody.username.isEmpty()){
-                throw new Exception("Username cannot be empty");
+            if(requestBody.phoneNumber == null || requestBody.username == null || requestBody.password == null) {
+                throw new RuntimeException("Invalid request body. Please provide all required fields.");
             }
 
-            User createdUser = userService.createUser(requestBody.username);
-            return new ResponseEntity<>("User created with ID: " + createdUser.getUserId(), HttpStatus.CREATED);
-        } catch (Exception e){
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+            Object token = userService.signUpUser(requestBody.phoneNumber, requestBody.username, requestBody.password);
+
+            return new ResponseObj(true, "User Created", token, HttpStatus.CREATED);
+        } catch (RuntimeException e) {
+            return new ResponseObj(false, e.getMessage(),  HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return new ResponseObj(false, "Internal Server Error",  HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    public static class AuthLoginRequest {
+        public String phoneNumber;
+        public String password;
+    }
+
+    @PostMapping("/auth/login")
+    public ResponseObj authLogin(@RequestBody AuthLoginRequest requestBody) {
+        try{
+            if(requestBody.phoneNumber == null || requestBody.password == null) {
+                throw new BadRequestException("Invalid request body. Please provide all required fields.");
+            }
+
+            Object token = userService.loginUser(requestBody.phoneNumber, requestBody.password);
+
+            return new ResponseObj(true, "User Logged In", token, HttpStatus.OK);
+        } catch (BadRequestException e) {
+            return new ResponseObj(false, e.getMessage(),  HttpStatus.BAD_REQUEST);
+        } catch (RuntimeException e) {
+            System.out.println(e.getMessage());
+            return new ResponseObj(false, "Internal Server Error",  HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 
 }
