@@ -20,10 +20,6 @@ public class JwtTokenProvider {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpiration);
 
-        System.out.println("expiration: " + jwtExpiration);
-        System.out.println("jwtSecret: " + jwtSecret);
-        System.out.println("userIdHash: " + userIdHash);
-
         return Jwts.builder()
                 .setSubject(userIdHash)
                 .setIssuedAt(now)

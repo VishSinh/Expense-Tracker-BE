@@ -62,13 +62,13 @@ public class UserService {
 
         // Check if user exists
         if (user == null) {
-            throw new RuntimeException("User not found");
+            throw new RuntimeException("Error: User not found");
         }
 
         // Check password
-//        if (!Objects.equals(Sha256HashGenerator.generateSha256Hash(password), user.getPasswordHash())) {
-//            throw new RuntimeException("Invalid password");
-//        }
+        if (!Objects.equals(Sha256HashGenerator.generateSha256Hash(password), user.getPasswordHash())) {
+            throw new RuntimeException("Error: Invalid password");
+        }
 
         String userIdHash = user.getUserIdHash();
 
