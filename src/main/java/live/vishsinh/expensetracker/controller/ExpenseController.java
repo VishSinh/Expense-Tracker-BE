@@ -56,10 +56,16 @@ public class ExpenseController {
     }
 
     @PostMapping("/get")
-    public ResponseObj getUserExpense(@RequestBody getUserExpenseRequest requestBody) {
+    public ResponseObj getUserExpense(@RequestBody getUserExpenseRequest requestBody, @RequestHeader("Authorization") String token) {
         try{
+            boolean isTokenValid = verifyUserToken.verifyToken(token, requestBody.userIdHash);
+
+            if (!isTokenValid) {
+                return new ResponseObj(false, "Invalid Token", HttpStatus.UNAUTHORIZED);
+            }
+
             List<Expense> userExpenses = expenseService.getUserExpense(requestBody.userIdHash);
-            System.out.println("Here - 3");
+
             return new ResponseObj(true, "", userExpenses, HttpStatus.OK);
         } catch (RuntimeException e) {
             System.out.println(e.getMessage());

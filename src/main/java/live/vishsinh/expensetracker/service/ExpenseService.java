@@ -24,6 +24,8 @@ public class ExpenseService {
                 throw new RuntimeException("User not found");
             }
 
+            Long groupId = user.getGroupId();
+
             Expense expense = new Expense();
             expense.setAmount(amount);
             expense.setDate(date);
@@ -34,12 +36,12 @@ public class ExpenseService {
         }
 
         public List<Expense> getUserExpense(String userIdHash) {
-            System.out.println("Here - 1");
+
             User user = userRepository.findByUserIdHash(userIdHash);
             if(user == null) {
                 throw new RuntimeException("User not found");
             }
-            System.out.println("Here - 2");
+
             return expenseRepository.findByUserIdHash(user.getUserIdHash());
         }
 }

@@ -27,6 +27,9 @@ public class Expense {
     @Column(name = "user_id_hash", nullable = false)
     private String userIdHash;
 
+//    @Column(name = "group_id")
+//    private Long groupId;
+
     // Constructors
     public Expense() {
     }
@@ -37,6 +40,7 @@ public class Expense {
         this.description = description;
         this.date = date;
         this.userIdHash = userIdHash;
+//        this.groupId = groupId;
     }
 
     // Getters and Setters
@@ -60,4 +64,6 @@ public class Expense {
     public void setUserId(String userIdHash) {
         this.userIdHash = userIdHash;
     }
+
+//    public void setGroupId(Long groupId) { this.groupId = groupId; }
 }

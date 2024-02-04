@@ -11,6 +11,8 @@ import live.vishsinh.expensetracker.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Date;
 
@@ -80,9 +82,34 @@ public class UserService {
         // Generate a token
         String token = JwtTokenProvider.generateToken(user.getUserIdHash());
         ActiveSession activeSession =  new ActiveSession(userIdHash, token, new Date());
+        activeSessionRepository.save(activeSession);
 
         // Generate and return the token
-        return activeSessionRepository.save(activeSession);
+        return new HashMap<>(Map.of("token", token));
+    }
+
+
+    public Object resetPassword(String userIdHash, String oldPassword, String newPassword) {
+        // Find user by phone number
+        User user = userRepository.findByUserIdHash(userIdHash);
+
+        // Check if user exists
+        if (user == null) {
+            throw new RuntimeException("Error: User not found");
+        }
+
+        // Check password
+        if (!Objects.equals(Sha256HashGenerator.generateSha256Hash(oldPassword), user.getPasswordHash())) {
+            throw new RuntimeException("Error: Invalid password");
+        }
+
+        // Update the password
+        user.setPasswordHash(Sha256HashGenerator.generateSha256Hash(newPassword));
+        userRepository.save(user);
+
+        String token = JwtTokenProvider.generateToken(user.getUserIdHash());
+
+        return new HashMap<>(Map.of("token", token));
     }
 }
 

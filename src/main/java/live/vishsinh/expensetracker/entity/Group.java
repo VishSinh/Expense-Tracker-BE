@@ -13,20 +13,20 @@ public class Group {
     @Column(name = "group_id")
     private Long groupId;
 
-    @Column(name = "admin_id")
-    private Long adminId;
+    @Column(nullable = false, name = "admin_id")
+    private String adminId;
 
     @Column(nullable = false, length = 100)
     private String password;
 
-    @Column(name = "group_name", length = 20)
+    @Column(nullable = false, name = "group_name", length = 20)
     private String groupName;
 
     // Constructors
     public Group() {
     }
 
-    public Group(Long adminId, String password, String groupName) {
+    public Group(String adminId, String password, String groupName) {
         this.adminId = adminId;
         this.password = password;
         this.groupName = groupName;
@@ -36,7 +36,7 @@ public class Group {
         this.groupId = groupId;
     }
 
-    public void setAdminId(Long adminId) {
+    public void setAdminId(String adminId) {
         this.adminId = adminId;
     }
 
