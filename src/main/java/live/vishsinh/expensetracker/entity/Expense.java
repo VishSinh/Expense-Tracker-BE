@@ -2,18 +2,21 @@ package live.vishsinh.expensetracker.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Date;
+import java.util.UUID;
 
 @Getter
+@Setter
 @Entity
 @Table(name = "expenses")
 public class Expense {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "expense_id")
-    private Long expenseId;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "expense_id", nullable = false, columnDefinition = "BINARY(16)")
+    private UUID expenseId;
 
     @Column(nullable = false)
     private Double amount;
@@ -24,46 +27,29 @@ public class Expense {
     @Column(nullable = false)
     public Date date;
 
-    @Column(name = "user_id_hash", nullable = false)
-    private String userIdHash;
+    @Column(name = "user_id", nullable = false)
+    private UUID userId;
 
-//    @Column(name = "group_id")
-//    private Long groupId;
+    @Column(name = "group_id")
+    private UUID groupId;
 
     // Constructors
     public Expense() {
     }
 
-    public Expense(Long expenseId, Double amount, String description, Date date, String userIdHash) {
-        this.expenseId = expenseId;
+    public Expense(Double amount, String description, Date date, UUID userId) {
         this.amount = amount;
         this.description = description;
         this.date = date;
-        this.userIdHash = userIdHash;
-//        this.groupId = groupId;
+        this.userId = userId;
     }
 
-    // Getters and Setters
-
-    public void setExpenseId(Long expenseId) {
-        this.expenseId = expenseId;
-    }
-
-    public void setAmount(Double amount) {
+    public Expense(Double amount, String description, Date date, UUID userId, UUID groupId) {
         this.amount = amount;
-    }
-
-    public void setDescription(String description) {
         this.description = description;
-    }
-
-    public void setDate(Date date) {
         this.date = date;
+        this.userId = userId;
+        this.groupId = groupId;
     }
 
-    public void setUserId(String userIdHash) {
-        this.userIdHash = userIdHash;
-    }
-
-//    public void setGroupId(Long groupId) { this.groupId = groupId; }
 }

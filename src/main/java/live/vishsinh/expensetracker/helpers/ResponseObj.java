@@ -6,19 +6,19 @@ public class ResponseObj {
     public Boolean success;
     public String message;
     public Object data;
-    public HttpStatus status;
+    public int code;
 
     public ResponseObj(Boolean success, String message, HttpStatus status) {
         this.success = success;
         this.message = message;
         this.data = null;
-        this.status = status;
+        this.code = status.value();
     }
 
     public ResponseObj(Boolean success, String message, Object data, HttpStatus status) {
         this.success = success;
         this.message = message;
         this.data = data;
-        this.status = status;
+        this.code = status.value();
     }
 }

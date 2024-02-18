@@ -3,17 +3,20 @@ package live.vishsinh.expensetracker.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Date;
+import java.util.UUID;
 
 @Getter
+@Setter
 @Entity
 @Table(name = "active_sessions")
 public class ActiveSession {
 
     @Id
     @Column(name = "user_id_hash", nullable = false)
-    private String userIdHash;
+    private UUID userId;
 
     @Column(nullable = false)
     private String token;
@@ -24,21 +27,9 @@ public class ActiveSession {
     public ActiveSession() {
     }
 
-    public ActiveSession(String userIdHash, String token, Date createDateTime) {
-        this.userIdHash = userIdHash;
+    public ActiveSession(UUID userIdHash, String token, Date createDateTime) {
+        this.userId = userIdHash;
         this.token = token;
-        this.createDateTime = createDateTime;
-    }
-
-    public void setUserIdHash(String userIdHash) {
-        this.userIdHash = userIdHash;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
-    }
-
-    public void setCreateDateTime(Date createDateTime) {
         this.createDateTime = createDateTime;
     }
 }

@@ -2,49 +2,42 @@ package live.vishsinh.expensetracker.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.Setter;
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 
 @Getter
+@Setter
 @Entity
-@Table(name = "user_group")
+@Table(name = "group_table")
 public class Group {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "group_id")
-    private Long groupId;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "group_id", nullable = false, columnDefinition = "BINARY(16)")
+    private UUID groupId;
 
-    @Column(nullable = false, name = "admin_id")
-    private String adminId;
+    @Column(name = "admin_id", nullable = false)
+    private UUID adminId;
 
     @Column(nullable = false, length = 100)
     private String password;
 
-    @Column(nullable = false, name = "group_name", length = 20)
+    @Column(name = "group_name", nullable = false, length = 20)
     private String groupName;
+
+    @ManyToMany(mappedBy = "groups", fetch = FetchType.LAZY)
+    private Set<User> users = new HashSet<>();
 
     // Constructors
     public Group() {
     }
 
-    public Group(String adminId, String password, String groupName) {
+    public Group(UUID adminId, String password, String groupName) {
         this.adminId = adminId;
         this.password = password;
-        this.groupName = groupName;
-    }
-
-    public void setGroupId(Long groupId) {
-        this.groupId = groupId;
-    }
-
-    public void setAdminId(String adminId) {
-        this.adminId = adminId;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public void setGroupName(String groupName) {
         this.groupName = groupName;
     }
 }

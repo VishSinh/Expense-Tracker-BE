@@ -2,19 +2,18 @@ package live.vishsinh.expensetracker.service;
 
 import jakarta.transaction.Transactional;
 import live.vishsinh.expensetracker.entity.ActiveSession;
+import live.vishsinh.expensetracker.entity.Group;
 import live.vishsinh.expensetracker.entity.User;
 import live.vishsinh.expensetracker.helpers.JwtTokenProvider;
 import live.vishsinh.expensetracker.helpers.Sha256HashGenerator;
 import live.vishsinh.expensetracker.repository.ActiveSessionRepository;
 import live.vishsinh.expensetracker.repository.UserRepository;
 
+import org.apache.coyote.BadRequestException;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Date;
+import java.util.*;
 
 @Service
 public class UserService {
@@ -30,31 +29,25 @@ public class UserService {
     @Autowired
     private Sha256HashGenerator Sha256HashGenerator;
 
-    public Object signUpUser(String phoneNumber, String username,String password) {
+    public Object signUpUser(String phoneNumber, String name, String password) {
 
-        if (userRepository.existsByPhoneNumber(phoneNumber)){
+        if (userRepository.existsByPhoneNumber(phoneNumber))
             throw new RuntimeException("Phone number already in use. Please login instead.");
-        }
 
-        Date now = new Date();
-
-        // Create a new user
-        User user = new User();
-        user.setUserIdHash(Sha256HashGenerator.generateSha256Hash(phoneNumber));
-        user.setPasswordHash(Sha256HashGenerator.generateSha256Hash(password));
-        user.setPhoneNumber(phoneNumber);
-        user.setUsername(username);
-
-        // Generate a token
-        String token = JwtTokenProvider.generateToken(user.getUserIdHash());
-
-        // Create a new active session
-        ActiveSession activeSession = new ActiveSession(user.getUserIdHash(), token, now);
+        // Create a new user by hashing the password
+        User user = new User(Sha256HashGenerator.generateSha256Hash(password), phoneNumber, name);
 
         // Save the user
         userRepository.save(user);
 
-        return activeSessionRepository.save(activeSession);
+        // Generate a token
+        String token = JwtTokenProvider.generateToken(user.getUserId().toString());
+
+        // Create a new active session
+        ActiveSession activeSession = new ActiveSession(user.getUserId(), token, new Date());
+        activeSessionRepository.save(activeSession);
+
+        return new HashMap<>(Map.of("user_id", activeSession.getUserId(), "token", activeSession.getToken()));
     }
 
     @Transactional
@@ -68,48 +61,72 @@ public class UserService {
         }
 
         // Check password
-        if (!Objects.equals(Sha256HashGenerator.generateSha256Hash(password), user.getPasswordHash())) {
+        if (!Objects.equals(Sha256HashGenerator.generateSha256Hash(password), user.getPassword())) {
             throw new RuntimeException("Error: Invalid password");
         }
 
-        String userIdHash = user.getUserIdHash();
+        UUID userId = user.getUserId();
 
-        //Check if their exists a Active Session record and delete it
-        if(activeSessionRepository.existsByUserIdHash(userIdHash)){
-            activeSessionRepository.deleteByUserIdHash(userIdHash);
-        }
+        //Check if their exists an Active Session record and delete it
+        if (activeSessionRepository.existsByUserId(userId)) activeSessionRepository.deleteByUserId(userId);
 
         // Generate a token
-        String token = JwtTokenProvider.generateToken(user.getUserIdHash());
-        ActiveSession activeSession =  new ActiveSession(userIdHash, token, new Date());
+        String token = JwtTokenProvider.generateToken(user.getUserId().toString());
+
+        // Create a new active session
+        ActiveSession activeSession = new ActiveSession(userId, token, new Date());
         activeSessionRepository.save(activeSession);
 
-        // Generate and return the token
-        return new HashMap<>(Map.of("token", token));
+        return new HashMap<>(Map.of("user_id", activeSession.getUserId(), "token", activeSession.getToken()));
     }
 
+    @Transactional
+    public Object resetPassword(UUID userId, String oldPassword, String newPassword) throws BadRequestException {
 
-    public Object resetPassword(String userIdHash, String oldPassword, String newPassword) {
-        // Find user by phone number
-        User user = userRepository.findByUserIdHash(userIdHash);
+        User user = userRepository.findByUserId(userId);
 
         // Check if user exists
         if (user == null) {
-            throw new RuntimeException("Error: User not found");
+            throw new BadRequestException("Error: User not found");
         }
 
         // Check password
-        if (!Objects.equals(Sha256HashGenerator.generateSha256Hash(oldPassword), user.getPasswordHash())) {
-            throw new RuntimeException("Error: Invalid password");
+        if (!Objects.equals(Sha256HashGenerator.generateSha256Hash(oldPassword), user.getPassword())) {
+            throw new BadRequestException("Error: Invalid password");
         }
 
         // Update the password
-        user.setPasswordHash(Sha256HashGenerator.generateSha256Hash(newPassword));
+        user.setPassword(Sha256HashGenerator.generateSha256Hash(newPassword));
         userRepository.save(user);
 
-        String token = JwtTokenProvider.generateToken(user.getUserIdHash());
+        //Check if their exists an Active Session record and delete it
+        if (!activeSessionRepository.existsByUserId(userId))
+            throw new RuntimeException("Error: User not logged in");
+        activeSessionRepository.deleteByUserId(userId);
 
-        return new HashMap<>(Map.of("token", token));
+        // Generate a token
+        String token = JwtTokenProvider.generateToken(user.getUserId().toString());
+
+        // Create a new active session and save it
+        activeSessionRepository.save(new ActiveSession(userId, token, new Date()));
+
+        return new HashMap<>(Map.of("user_id", userId,"token", token));
+    }
+
+    public Object fetchUserDetails(UUID userId) throws BadRequestException {
+
+        User user = userRepository.findByUserId(userId);
+        if (user == null) {
+            throw new BadRequestException("Error: User not found");
+        }
+
+        Set<Group> groups = user.getGroups();
+        List<UUID> groupIds = new ArrayList<>();
+        for (Group group : groups) {
+            groupIds.add(group.getGroupId());
+        }
+
+        return new HashMap<>(Map.of("phone_number", user.getPhoneNumber(), "name", user.getName(), "group_ids", groupIds));
     }
 }
 

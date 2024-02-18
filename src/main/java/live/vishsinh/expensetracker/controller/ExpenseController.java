@@ -1,5 +1,6 @@
 package live.vishsinh.expensetracker.controller;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import live.vishsinh.expensetracker.entity.Expense;
 import live.vishsinh.expensetracker.helpers.ResponseObj;
 import live.vishsinh.expensetracker.helpers.VerifyUserToken;
@@ -10,10 +11,13 @@ import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+
+import javax.security.auth.login.LoginException;
 import javax.validation.constraints.*;
 
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 
 @RestController
@@ -29,47 +33,70 @@ public class ExpenseController {
         public Double amount;
         public Date date;
         public String description;
-        public String userIdHash;
+
+        @JsonProperty("user_id")
+        public UUID userId;
+
+        @JsonProperty("group_id")
+        public UUID groupId;
     }
 
     @PostMapping("/create")
-    public ResponseObj createExpense(@RequestBody createExpenseRequest requestBody, @RequestHeader("Authorization") String token){
-        try{
-            boolean isTokenValid = verifyUserToken.verifyToken(token, requestBody.userIdHash);
+    public ResponseObj createExpense(@RequestBody createExpenseRequest requestBody, @RequestHeader("Authorization") String token) {
+        try {
+            verifyUserToken.verifyToken(token, requestBody.userId.toString());
 
-            if (!isTokenValid) {
-                return new ResponseObj(false, "Invalid Token", HttpStatus.UNAUTHORIZED);
+            if (requestBody.amount == null || requestBody.date == null || requestBody.description == null || requestBody.userId == null) {
+                throw new BadRequestException("Invalid request body");
             }
 
-            Expense createdExpense = expenseService.createExpense(requestBody.amount, requestBody.date, requestBody.description, requestBody.userIdHash);
-            return new ResponseObj(true, "", createdExpense, HttpStatus.CREATED);
-        }
-        catch (RuntimeException e) {
+            if (requestBody.amount <= 0) {
+                throw new BadRequestException("Invalid amount");
+            }
+
+            Expense createdExpense = expenseService.createExpense(requestBody.amount, requestBody.date, requestBody.description, requestBody.userId, requestBody.groupId);
+
+            return new ResponseObj(true, "Expense record created", createdExpense, HttpStatus.CREATED);
+
+        } catch (BadRequestException e) {
+            return new ResponseObj(false, e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (LoginException e) {
+            return new ResponseObj(false, e.getMessage(), HttpStatus.UNAUTHORIZED);
+        } catch(RuntimeException e){
             System.out.println(e.getMessage());
-            return new ResponseObj(false, "Internal Server Error",  HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseObj(false, "An error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
 
-    public static class getUserExpenseRequest {
-        public String userIdHash;
+    public static class getExpenseRequest {
+        @JsonProperty("user_id")
+        public UUID userId;
+
+        @JsonProperty("group_id")
+        public UUID groupId;
     }
 
     @PostMapping("/get")
-    public ResponseObj getUserExpense(@RequestBody getUserExpenseRequest requestBody, @RequestHeader("Authorization") String token) {
-        try{
-            boolean isTokenValid = verifyUserToken.verifyToken(token, requestBody.userIdHash);
+    public ResponseObj getExpenses(@RequestBody getExpenseRequest requestBody, @RequestHeader("Authorization") String token) {
+        try {
+            verifyUserToken.verifyToken(token, requestBody.userId.toString());
 
-            if (!isTokenValid) {
-                return new ResponseObj(false, "Invalid Token", HttpStatus.UNAUTHORIZED);
+            if (requestBody.userId == null) {
+                throw new BadRequestException("Invalid request body");
             }
 
-            List<Expense> userExpenses = expenseService.getUserExpense(requestBody.userIdHash);
+            List<Expense> expenses = expenseService.getExpenses(requestBody.userId, requestBody.groupId);
 
-            return new ResponseObj(true, "", userExpenses, HttpStatus.OK);
-        } catch (RuntimeException e) {
+            return new ResponseObj(true, "Expenses fetched", expenses, HttpStatus.OK);
+
+        } catch (BadRequestException e) {
+            return new ResponseObj(false, e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (LoginException e) {
+            return new ResponseObj(false, e.getMessage(), HttpStatus.UNAUTHORIZED);
+        } catch(RuntimeException e){
             System.out.println(e.getMessage());
-            return new ResponseObj(false, "Internal Server Error",  HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseObj(false, "An error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

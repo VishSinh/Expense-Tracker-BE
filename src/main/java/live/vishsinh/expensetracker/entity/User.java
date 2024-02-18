@@ -1,59 +1,48 @@
 package live.vishsinh.expensetracker.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.Setter;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 @Getter
 @Entity
+@Setter
 @Table(name = "user")
 public class User {
 
     @Id
-    @Column(nullable = false, name = "user_id_hash")
-    private String userIdHash;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "user_id", nullable = false, columnDefinition = "BINARY(16)")
+    private UUID userId;
 
-    @Column(nullable = false,name = "password_hash")
-    private String passwordHash;
+    @Column(name = "password", nullable = false)
+    private String password;
 
-    @Column(nullable = false, name = "phone_number")
+    @Column(name = "phone_number", nullable = false)
     private String phoneNumber;
 
     @Column(nullable = false, length = 20)
-    private String username;
+    private String name;
 
-    @Column(name = "group_id")
-    private Long groupId;  // Nullable group_id
+    @JsonIgnore
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "user_group", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "group_id"))
+    private Set<Group> groups = new HashSet<>();
 
     // Constructors
     public User() {
     }
 
-    public User(String userIdHash, String passwordHash, String phoneNumber, String username) {
-        this.userIdHash = userIdHash;
-        this.passwordHash = passwordHash;
+    public User(String password, String phoneNumber, String name) {
+        this.password = password;
         this.phoneNumber = phoneNumber;
-        this.username = username;
-    }
-
-    // setters
-    public void setUserIdHash(String userIdHash) {
-        this.userIdHash = userIdHash;
-    }
-
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
-    }
-
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public void setGroupId(Long groupId) {
-        this.groupId = groupId;
+        this.name = name;
     }
 
 }
